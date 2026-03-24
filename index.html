@@ -476,7 +476,12 @@
 <script>
 /* =================================================================
    GB/T 2828.1-2012 一次抽样方案查询核心逻辑
-   数据来源：GB/T 2828.1-2012 附表
+      数据来源：GB/T 2828.1-2012 附表
+   修正记录：
+   1. 修正表2-A字码D的AQL=10方案([0,1]→[1,2])
+   2. 修正表2-C字码D的AQL=10方案([0,1]→[2,3])
+   3. 修正表2-C字码F从AQL=10开始的数据偏移问题
+   4. renderResult补充悬挂区方案（Re=Ac+2）标注
 ================================================================= */
 
 /* -----------------------------------------------------------------
@@ -605,8 +610,8 @@ const NORMAL = [
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2], null,null,null,null,null,null ],
   // C(n=5)  首个有效AQL列=13(4.0)
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2],[2,3], null,null,null,null,null,null ],
-  // D(n=8)  首个有效AQL列=12(2.5)
-  [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2],[2,3],[3,4], null,null,null,null,null,null ],
+      // D(n=8)  首个有效AQL列=12(2.5) - 修正：AQL=10(索引15)应为[1,2]
+  [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,  [0,1],[0,1],[0,1],[1,2],[2,3],[3,4],[5,6],[7,8], null,null,null,null,null,null ],
   // E(n=13) 首个有效AQL列=11(1.5)
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2],[2,3],[3,4],[5,6], null,null,null,null,null,null ],
   // F(n=20) 首个有效AQL列=10(1.0)
@@ -689,12 +694,12 @@ const REDUCED = [
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2], null,null,null,null,null,null ],
   // C(n=2)  首个有效AQL列=14(6.5)
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2], null,null,null,null,null,null ],
-  // D(n=3)  首个有效AQL列=13(4.0)
-  [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2],[2,3], null,null,null,null,null,null ],
+      // D(n=3)  首个有效AQL列=13(4.0) - 修正：AQL=10(索引15)应为[2,3]
+  [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,   D,  [0,1],[0,1],[2,3],[3,4],[5,6],[8,9],[13,14], null,null,null,null,null,null ],
   // E(n=5)  首个有效AQL列=12(2.5)
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2],[2,3],[3,4], null,null,null,null,null,null ],
-  // F(n=8)  首个有效AQL列=11(1.5)
-  [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,  [0,1],[0,1],[0,1],[0,1],[0,1],[1,2],[2,3],[3,4],[5,6], null,null,null,null,null,null ],
+      // F(n=8)  首个有效AQL列=11(1.5) - 修正：AQL=10(索引15)应为[5,6]，后续数据已修正
+  [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,   D,  [0,1],[0,1],[0,1],[1,2],[5,6],[7,8],[10,11],[14,15],[21,22], null,null,null,null,null,null ],
   // G(n=13) 首个有效AQL列=10(1.0)
   [ D,  D,  D,  D,  D,  D,  D,  D,  D,  D,  [0,1],[0,1],[0,1],[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15], null,null,null,null,null,null ],
   // H(n=20) 首个有效AQL列=9(0.65)
@@ -705,8 +710,8 @@ const REDUCED = [
   [ D,  D,  D,  D,  D,  D,  D, [0,1],[0,1],   D, [1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],  U,   U,  null,null,null,null,null,null ],
   // L(n=80) 首个有效AQL列=6(0.15)；列9(AQL=0.65)→↓
   [ D,  D,  D,  D,  D,  D, [0,1],[0,1],[0,1],   D, [2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],  U,   U,   U,  null,null,null,null,null,null ],
-  // M(n=125) 首个有效AQL列=9(0.65)，Ac=1 Re=3
-  [ D,  D,  D,  D,  D, [0,1],[0,1],[0,1],[1,2],[1,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],  U,   U,   U,   U,  null,null,null,null,null,null ],
+  // M(n=125) 首个有效AQL列=5(0.10)
+  [ D,  D,  D,  D,  D, [0,1],[0,1],[0,1],[1,2],[1,3],[1,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],  U,   U,   U,  null,null,null,null,null,null ],
   // N(n=200) 首个有效AQL列=4(0.065)
   [ D,  D,  D,  D, [0,1],[0,1],[0,1],[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],  U,   U,   U,   U,   U,  null,null,null,null,null,null ],
   // P(n=315) 首个有效AQL列=3(0.040)
@@ -874,8 +879,10 @@ function renderResult(N, il, aqlIdx, severity, r) {
     const dirTip = r.arrowDir === '↓'
       ? '（原字码样本量对该 AQL 过小，改用较大样本量的方案）'
       : '（原字码样本量对该 AQL 过大，改用较小样本量的方案）';
+        // 特殊说明悬挂区方案（Re = Ac + 2）
+    const hangTip = (r.re === r.ac + 2) ? '【悬挂区方案】' : '';
     arrowNote.textContent =
-      `※ 字码 ${r.letter} 行对该 AQL 列为箭头"${r.arrowDir}"，标准规定应${dir}移动至字码 ${r.finalLetter} 行${dirTip}，样本量已相应调整。`;
+      `※ 字码 ${r.letter} 行对该 AQL 列为箭头"${r.arrowDir}"，标准规定应${dir}移动至字码 ${r.finalLetter} 行${dirTip}，样本量已相应调整。${hangTip}`;
     arrowNote.classList.add('visible');
   } else {
     arrowNote.textContent = '';
